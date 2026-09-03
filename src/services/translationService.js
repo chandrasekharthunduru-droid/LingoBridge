@@ -1,3 +1,6 @@
+const API_BASE = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
+const getApiUrl = (endpoint) => (endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`);
+
 export async function translate(text, sourceLang = 'auto', targetLang = 'en') {
   const token = localStorage.getItem('token');
   const headers = { 'Content-Type': 'application/json' };
@@ -7,7 +10,7 @@ export async function translate(text, sourceLang = 'auto', targetLang = 'en') {
 
   // Try backend proxy server first if available
   try {
-    const response = await fetch('/api/translate', {
+    const response = await fetch(getApiUrl('/api/translate'), {
       method: 'POST',
       headers,
       body: JSON.stringify({ text, sourceLang, targetLang }),
@@ -65,7 +68,7 @@ export async function fetchUserHistory() {
   const token = localStorage.getItem('token');
   if (!token) return [];
   try {
-    const res = await fetch('/api/history', {
+    const res = await fetch(getApiUrl('/api/history'), {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
@@ -82,7 +85,7 @@ export async function saveUserHistoryEntry(entry) {
   const token = localStorage.getItem('token');
   if (!token) return null;
   try {
-    const res = await fetch('/api/history', {
+    const res = await fetch(getApiUrl('/api/history'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -104,7 +107,7 @@ export async function deleteUserHistoryItemApi(id) {
   const token = localStorage.getItem('token');
   if (!token) return false;
   try {
-    const res = await fetch(`/api/history/${id}`, {
+    const res = await fetch(getApiUrl(`/api/history/${id}`), {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -119,7 +122,7 @@ export async function clearUserHistoryApi() {
   const token = localStorage.getItem('token');
   if (!token) return;
   try {
-    await fetch('/api/history', {
+    await fetch(getApiUrl('/api/history'), {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -133,7 +136,7 @@ export async function fetchUserFavorites() {
   const token = localStorage.getItem('token');
   if (!token) return [];
   try {
-    const res = await fetch('/api/favorites', {
+    const res = await fetch(getApiUrl('/api/favorites'), {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
@@ -150,7 +153,7 @@ export async function addUserFavoriteApi(favorite) {
   const token = localStorage.getItem('token');
   if (!token) return null;
   try {
-    const res = await fetch('/api/favorites', {
+    const res = await fetch(getApiUrl('/api/favorites'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -172,7 +175,7 @@ export async function removeUserFavoriteApi(id) {
   const token = localStorage.getItem('token');
   if (!token) return false;
   try {
-    const res = await fetch(`/api/favorites/${id}`, {
+    const res = await fetch(getApiUrl(`/api/favorites/${id}`), {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -188,7 +191,7 @@ export async function fetchUserGlossary() {
   const token = localStorage.getItem('token');
   if (!token) return [];
   try {
-    const res = await fetch('/api/glossary', {
+    const res = await fetch(getApiUrl('/api/glossary'), {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
@@ -205,7 +208,7 @@ export async function addGlossaryTermApi(term) {
   const token = localStorage.getItem('token');
   if (!token) return null;
   try {
-    const res = await fetch('/api/glossary', {
+    const res = await fetch(getApiUrl('/api/glossary'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -227,7 +230,7 @@ export async function updateGlossaryTermApi(id, updates) {
   const token = localStorage.getItem('token');
   if (!token) return null;
   try {
-    const res = await fetch(`/api/glossary/${id}`, {
+    const res = await fetch(getApiUrl(`/api/glossary/${id}`), {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -249,7 +252,7 @@ export async function deleteGlossaryTermApi(id) {
   const token = localStorage.getItem('token');
   if (!token) return false;
   try {
-    const res = await fetch(`/api/glossary/${id}`, {
+    const res = await fetch(getApiUrl(`/api/glossary/${id}`), {
       method: 'DELETE',
       headers: { Authorization: `Bearer ${token}` },
     });
@@ -266,7 +269,7 @@ export async function submitFeedbackApi(feedback) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = `Bearer ${token}`;
   try {
-    const res = await fetch('/api/feedback', {
+    const res = await fetch(getApiUrl('/api/feedback'), {
       method: 'POST',
       headers,
       body: JSON.stringify(feedback),
@@ -283,7 +286,7 @@ export async function fetchUserAnalyticsApi() {
   const token = localStorage.getItem('token');
   if (!token) return null;
   try {
-    const res = await fetch('/api/analytics', {
+    const res = await fetch(getApiUrl('/api/analytics'), {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok) {
@@ -300,7 +303,7 @@ export async function fetchUserAnalyticsApi() {
 export async function updateUserProfileApi(name) {
   const token = localStorage.getItem('token');
   if (!token) throw new Error('Not logged in.');
-  const res = await fetch('/api/user/profile', {
+  const res = await fetch(getApiUrl('/api/user/profile'), {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',

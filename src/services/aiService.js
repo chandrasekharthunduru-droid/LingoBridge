@@ -1,5 +1,7 @@
 // AI Text Improvement Service (Grammar, Spelling, & Clarity Refinement)
 
+const API_BASE = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
+
 export async function improveText(text) {
   if (!text || !text.trim()) {
     throw new Error('Please enter text to improve.');
@@ -11,7 +13,7 @@ export async function improveText(text) {
 
   // Try backend AI endpoint first
   try {
-    const res = await fetch('/api/ai/improve', {
+    const res = await fetch(`${API_BASE}/api/ai/improve`, {
       method: 'POST',
       headers,
       body: JSON.stringify({ text }),

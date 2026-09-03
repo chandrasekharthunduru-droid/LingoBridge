@@ -2,12 +2,15 @@ import React, { createContext, useState, useEffect, useContext } from 'react';
 
 const AuthContext = createContext(null);
 
-async function safeFetchJson(url, options = {}) {
+const API_BASE = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace(/\/$/, '') : '';
+
+async function safeFetchJson(endpoint, options = {}) {
+  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
   let response;
   try {
     response = await fetch(url, options);
   } catch (err) {
-    throw new Error('Unable to connect to backend server. Please make sure backend is running on port 5000.');
+    throw new Error('Unable to connect to authentication server. Please check your network connection.');
   }
 
   const contentType = response.headers.get('content-type');
@@ -31,8 +34,10 @@ async function safeFetchJson(url, options = {}) {
   let cleanText = '';
   if (text && !text.trim().startsWith('<')) {
     cleanText = text.trim();
+  } else if (response.status === 404) {
+    cleanText = 'Authentication endpoint was not found (HTTP 404).';
   } else if (response.status === 500) {
-    cleanText = 'Unable to connect to backend server on port 5000 (HTTP 500). Please check backend server.';
+    cleanText = 'The authentication server encountered an error (HTTP 500). Please try again.';
   }
 
   throw new Error(cleanText || `Server returned an invalid response (${response.status})`);

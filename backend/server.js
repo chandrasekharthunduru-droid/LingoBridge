@@ -48,8 +48,8 @@ function generateToken(user) {
 // AUTHENTICATION ENDPOINTS
 // -------------------------------------------------------------
 
-// POST /api/auth/register
-app.post('/api/auth/register', async (req, res) => {
+// POST /api/auth/register or /auth/register
+app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
   try {
     const { name, email, password } = req.body || {};
 
@@ -109,8 +109,8 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
-// POST /api/auth/login
-app.post('/api/auth/login', async (req, res) => {
+// POST /api/auth/login or /auth/login
+app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   try {
     const { email, password } = req.body || {};
@@ -183,8 +183,8 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// GET /api/auth/me
-app.get('/api/auth/me', authenticateToken, (req, res) => {
+// GET /api/auth/me or /auth/me
+app.get(['/api/auth/me', '/auth/me'], authenticateToken, (req, res) => {
   const user = findUserById(req.user.id);
   if (!user) {
     return res.status(404).json({
@@ -204,8 +204,8 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
   });
 });
 
-// PUT /api/user/profile
-app.put('/api/user/profile', authenticateToken, (req, res) => {
+// PUT /api/user/profile or /user/profile
+app.put(['/api/user/profile', '/user/profile'], authenticateToken, (req, res) => {
   const { name } = req.body || {};
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({
@@ -235,14 +235,14 @@ app.put('/api/user/profile', authenticateToken, (req, res) => {
 // TRANSLATION HISTORY ENDPOINTS (Authenticated & User-Scoped)
 // -------------------------------------------------------------
 
-// GET /api/history
-app.get('/api/history', authenticateToken, (req, res) => {
+// GET /api/history or /history
+app.get(['/api/history', '/history'], authenticateToken, (req, res) => {
   const history = getUserHistory(req.user.id);
   return res.json({ success: true, history });
 });
 
-// POST /api/history
-app.post('/api/history', authenticateToken, (req, res) => {
+// POST /api/history or /history
+app.post(['/api/history', '/history'], authenticateToken, (req, res) => {
   const { sourceLang, targetLang, original, translated } = req.body || {};
   if (!original || !translated) {
     return res.status(400).json({ success: false, error: 'Invalid history payload.' });
@@ -251,8 +251,8 @@ app.post('/api/history', authenticateToken, (req, res) => {
   return res.status(201).json({ success: true, entry });
 });
 
-// DELETE /api/history/:id
-app.delete('/api/history/:id', authenticateToken, (req, res) => {
+// DELETE /api/history/:id or /history/:id
+app.delete(['/api/history/:id', '/history/:id'], authenticateToken, (req, res) => {
   const success = deleteUserHistoryItem(req.user.id, req.params.id);
   if (!success) {
     return res.status(404).json({ success: false, message: 'History item not found.' });
@@ -260,8 +260,8 @@ app.delete('/api/history/:id', authenticateToken, (req, res) => {
   return res.json({ success: true, message: 'Item deleted successfully.' });
 });
 
-// DELETE /api/history
-app.delete('/api/history', authenticateToken, (req, res) => {
+// DELETE /api/history or /history
+app.delete(['/api/history', '/history'], authenticateToken, (req, res) => {
   clearUserHistory(req.user.id);
   return res.json({ success: true, message: 'History cleared successfully.' });
 });
@@ -270,14 +270,14 @@ app.delete('/api/history', authenticateToken, (req, res) => {
 // FAVORITES ENDPOINTS (Authenticated & User-Scoped)
 // -------------------------------------------------------------
 
-// GET /api/favorites
-app.get('/api/favorites', authenticateToken, (req, res) => {
+// GET /api/favorites or /favorites
+app.get(['/api/favorites', '/favorites'], authenticateToken, (req, res) => {
   const favorites = getUserFavorites(req.user.id);
   return res.json({ success: true, favorites });
 });
 
-// POST /api/favorites
-app.post('/api/favorites', authenticateToken, (req, res) => {
+// POST /api/favorites or /favorites
+app.post(['/api/favorites', '/favorites'], authenticateToken, (req, res) => {
   const { sourceLang, targetLang, original, translated } = req.body || {};
   if (!original || !translated) {
     return res.status(400).json({ success: false, message: 'Original and translated text are required.' });
@@ -286,8 +286,8 @@ app.post('/api/favorites', authenticateToken, (req, res) => {
   return res.status(201).json({ success: true, favorite });
 });
 
-// DELETE /api/favorites/:id
-app.delete('/api/favorites/:id', authenticateToken, (req, res) => {
+// DELETE /api/favorites/:id or /favorites/:id
+app.delete(['/api/favorites/:id', '/favorites/:id'], authenticateToken, (req, res) => {
   const success = removeUserFavorite(req.user.id, req.params.id);
   if (!success) {
     return res.status(404).json({ success: false, message: 'Favorite item not found.' });
@@ -299,14 +299,14 @@ app.delete('/api/favorites/:id', authenticateToken, (req, res) => {
 // PERSONAL GLOSSARY ENDPOINTS (Authenticated & User-Scoped)
 // -------------------------------------------------------------
 
-// GET /api/glossary
-app.get('/api/glossary', authenticateToken, (req, res) => {
+// GET /api/glossary or /glossary
+app.get(['/api/glossary', '/glossary'], authenticateToken, (req, res) => {
   const terms = getUserGlossary(req.user.id);
   return res.json({ success: true, terms });
 });
 
-// POST /api/glossary
-app.post('/api/glossary', authenticateToken, (req, res) => {
+// POST /api/glossary or /glossary
+app.post(['/api/glossary', '/glossary'], authenticateToken, (req, res) => {
   const { sourceLang, targetLang, sourceTerm, targetTerm } = req.body || {};
   if (!sourceTerm || !targetTerm) {
     return res.status(400).json({ success: false, message: 'Source term and target term are required.' });
@@ -315,8 +315,8 @@ app.post('/api/glossary', authenticateToken, (req, res) => {
   return res.status(201).json({ success: true, term });
 });
 
-// PUT /api/glossary/:id
-app.put('/api/glossary/:id', authenticateToken, (req, res) => {
+// PUT /api/glossary/:id or /glossary/:id
+app.put(['/api/glossary/:id', '/glossary/:id'], authenticateToken, (req, res) => {
   const { sourceTerm, targetTerm, sourceLang, targetLang } = req.body || {};
   const term = updateGlossaryTerm(req.user.id, req.params.id, { sourceTerm, targetTerm, sourceLang, targetLang });
   if (!term) {
@@ -325,8 +325,8 @@ app.put('/api/glossary/:id', authenticateToken, (req, res) => {
   return res.json({ success: true, term });
 });
 
-// DELETE /api/glossary/:id
-app.delete('/api/glossary/:id', authenticateToken, (req, res) => {
+// DELETE /api/glossary/:id or /glossary/:id
+app.delete(['/api/glossary/:id', '/glossary/:id'], authenticateToken, (req, res) => {
   const success = deleteGlossaryTerm(req.user.id, req.params.id);
   if (!success) {
     return res.status(404).json({ success: false, message: 'Glossary term not found.' });
@@ -338,8 +338,8 @@ app.delete('/api/glossary/:id', authenticateToken, (req, res) => {
 // TRANSLATION FEEDBACK ENDPOINT
 // -------------------------------------------------------------
 
-// POST /api/feedback
-app.post('/api/feedback', (req, res) => {
+// POST /api/feedback or /feedback
+app.post(['/api/feedback', '/feedback'], (req, res) => {
   let userId = null;
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -359,8 +359,8 @@ app.post('/api/feedback', (req, res) => {
 // TRANSLATION ANALYTICS ENDPOINT (Authenticated & User-Scoped)
 // -------------------------------------------------------------
 
-// GET /api/analytics
-app.get('/api/analytics', authenticateToken, (req, res) => {
+// GET /api/analytics or /analytics
+app.get(['/api/analytics', '/analytics'], authenticateToken, (req, res) => {
   const analytics = getUserAnalytics(req.user.id);
   return res.json({ success: true, analytics });
 });
@@ -369,7 +369,7 @@ app.get('/api/analytics', authenticateToken, (req, res) => {
 // AI TEXT IMPROVEMENT ENDPOINT
 // -------------------------------------------------------------
 
-app.post('/api/ai/improve', (req, res) => {
+app.post(['/api/ai/improve', '/ai/improve'], (req, res) => {
   const { text } = req.body || {};
   if (!text || typeof text !== 'string' || !text.trim()) {
     return res.status(400).json({ error: 'Text parameter is required.' });
@@ -517,7 +517,11 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Translation proxy & auth server listening on port ${PORT}`);
-});
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Translation proxy & auth server listening on port ${PORT}`);
+  });
+}
+
+module.exports = app;
 

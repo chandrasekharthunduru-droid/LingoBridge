@@ -1,39 +1,69 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_FILE = path.join(__dirname, 'data.json');
+const SEED_DATA_FILE = path.join(__dirname, 'data.json');
+
+function getDataFilePath() {
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
+    const tmpPath = path.join('/tmp', 'lingobridge_data.json');
+    if (!fs.existsSync(tmpPath)) {
+      try {
+        if (fs.existsSync(SEED_DATA_FILE)) {
+          fs.copyFileSync(SEED_DATA_FILE, tmpPath);
+        } else {
+          fs.writeFileSync(
+            tmpPath,
+            JSON.stringify({ users: [], history: [], favorites: [], glossary: [], feedback: [] })
+          );
+        }
+      } catch (err) {
+        console.warn('Could not initialize /tmp data file:', err.message);
+      }
+    }
+    return tmpPath;
+  }
+  return SEED_DATA_FILE;
+}
+
+let memoryCache = null;
 
 function loadData() {
-  if (!fs.existsSync(DATA_FILE)) {
+  const filePath = getDataFilePath();
+  if (!fs.existsSync(filePath)) {
     const defaultData = { users: [], history: [], favorites: [], glossary: [], feedback: [] };
     try {
-      fs.writeFileSync(DATA_FILE, JSON.stringify(defaultData, null, 2));
+      fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
     } catch (e) {
-      console.error('Error creating default data.json:', e);
+      console.warn('Filesystem write not permitted, using in-memory fallback:', e.message);
     }
+    memoryCache = defaultData;
     return defaultData;
   }
   try {
-    const raw = fs.readFileSync(DATA_FILE, 'utf-8');
+    const raw = fs.readFileSync(filePath, 'utf-8');
     const parsed = JSON.parse(raw);
-    return {
+    memoryCache = {
       users: Array.isArray(parsed?.users) ? parsed.users : [],
       history: Array.isArray(parsed?.history) ? parsed.history : [],
       favorites: Array.isArray(parsed?.favorites) ? parsed.favorites : [],
       glossary: Array.isArray(parsed?.glossary) ? parsed.glossary : [],
       feedback: Array.isArray(parsed?.feedback) ? parsed.feedback : [],
     };
+    return memoryCache;
   } catch (e) {
-    console.error('Error reading data.json, resetting to default', e);
+    console.error('Error reading data file:', e.message);
+    if (memoryCache) return memoryCache;
     return { users: [], history: [], favorites: [], glossary: [], feedback: [] };
   }
 }
 
 function saveData(data) {
+  memoryCache = data;
+  const filePath = getDataFilePath();
   try {
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2));
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
   } catch (e) {
-    console.error('Error saving data.json', e);
+    console.warn('Error writing data file (data held in memory):', e.message);
   }
 }
 

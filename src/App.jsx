@@ -15,6 +15,10 @@ function App() {
           <Route path="/signup" element={<SignUpPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/translator" element={<TranslatorPage />} />
+            <Route path="/dashboard" element={<Navigate to="/translator" replace />} />
+            <Route path="/history" element={<Navigate to="/translator" replace />} />
+            <Route path="/settings" element={<Navigate to="/translator" replace />} />
+            <Route path="/profile" element={<Navigate to="/translator" replace />} />
           </Route>
           <Route path="*" element={<Navigate to="/translator" replace />} />
         </Routes>
