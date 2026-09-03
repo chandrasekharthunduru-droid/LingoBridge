@@ -449,8 +449,23 @@ app.post(['/translate', '/api/translate'], async (req, res) => {
       translated = response.data[0].map((item) => item[0]).join('');
       detectedSource = response.data[2] || sourceLang;
     } catch (fallbackErr) {
-      console.error('Fallback translation error:', fallbackErr.message);
-      return res.status(500).json({ success: false, message: 'Translation failed. Please try again.', error: 'Translation failed.' });
+      console.warn('Google GTX fallback error on backend:', fallbackErr.message);
+      // Try MyMemory before returning error
+      try {
+        const langPair = `${sourceLang === 'auto' ? 'autodetect' : sourceLang}|${targetLang}`;
+        const mmUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${langPair}`;
+        const mmRes = await axios.get(mmUrl, { timeout: 6000 });
+        if (mmRes.data?.responseData?.translatedText) {
+          translated = mmRes.data.responseData.translatedText;
+          detectedSource = mmRes.data.responseData.detectedLanguage || sourceLang;
+        }
+      } catch (mmErr) {
+        console.error('MyMemory backend fallback error:', mmErr.message);
+      }
+
+      if (!translated) {
+        return res.status(500).json({ success: false, message: 'Translation failed. Please try again.', error: 'Translation failed.' });
+      }
     }
   }
 
