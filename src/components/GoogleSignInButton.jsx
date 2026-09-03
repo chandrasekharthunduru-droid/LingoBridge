@@ -57,13 +57,19 @@ function GoogleSignInButton({ text = 'continue_with', onError }) {
       // Detect dark theme
       const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
+      // Clear any prior rendered button to prevent duplication
+      buttonRef.current.innerHTML = '';
+
+      const parentWidth = buttonRef.current.parentElement?.clientWidth || 380;
+      const buttonWidth = Math.max(200, Math.min(400, parentWidth));
+
       window.google.accounts.id.renderButton(buttonRef.current, {
         theme: isDark ? 'filled_black' : 'outline',
         size: 'large',
         text: text === 'signup_with' ? 'signup_with' : 'continue_with',
         shape: 'rectangular',
         logo_alignment: 'left',
-        width: Math.min(380, buttonRef.current.parentElement?.clientWidth || 380),
+        width: buttonWidth,
       });
     } catch (err) {
       console.warn('Error initializing Google Sign-In button:', err);
