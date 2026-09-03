@@ -3,6 +3,7 @@ const path = require('path');
 
 const SEED_DATA_FILE = path.join(__dirname, 'data.json');
 
+// Helper to determine active JSON file path
 function getDataFilePath() {
   if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) {
     const tmpPath = path.join('/tmp', 'lingobridge_data.json');
@@ -27,18 +28,116 @@ function getDataFilePath() {
 
 let memoryCache = null;
 
-function loadData() {
+// Read default seed data
+function getSeedData() {
+  try {
+    if (fs.existsSync(SEED_DATA_FILE)) {
+      const raw = fs.readFileSync(SEED_DATA_FILE, 'utf-8');
+      return JSON.parse(raw);
+    }
+  } catch (e) {}
+  return { users: [], history: [], favorites: [], glossary: [], feedback: [] };
+}
+
+// -------------------------------------------------------------
+// VERCEL KV / UPSTASH REST HELPER
+// -------------------------------------------------------------
+const kvUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const kvToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+async function getFromKv() {
+  if (!kvUrl || !kvToken) return null;
+  try {
+    const res = await fetch(`${kvUrl}/get/lingobridge:data`, {
+      headers: { Authorization: `Bearer ${kvToken}` },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      let val = json.result;
+      if (typeof val === 'string') {
+        try {
+          val = JSON.parse(val);
+        } catch (e) {}
+      }
+      if (val && typeof val === 'object' && Array.isArray(val.users)) {
+        return val;
+      }
+    }
+  } catch (err) {
+    console.warn('Vercel KV read failed:', err.message);
+  }
+  return null;
+}
+
+async function saveToKv(data) {
+  if (!kvUrl || !kvToken) return false;
+  try {
+    const res = await fetch(`${kvUrl}/set/lingobridge:data`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${kvToken}` },
+      body: JSON.stringify(data),
+    });
+    return res.ok;
+  } catch (err) {
+    console.warn('Vercel KV write failed:', err.message);
+    return false;
+  }
+}
+
+// -------------------------------------------------------------
+// MONGODB CONNECTION (Optional, if MONGODB_URI is provided)
+// -------------------------------------------------------------
+let mongoClient = null;
+let mongoDbInstance = null;
+
+async function getMongoDb() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) return null;
+  if (mongoDbInstance) return mongoDbInstance;
+  try {
+    const { MongoClient } = require('mongodb');
+    mongoClient = new MongoClient(uri);
+    await mongoClient.connect();
+    mongoDbInstance = mongoClient.db(process.env.MONGODB_DB_NAME || 'lingobridge');
+    console.log('Connected to MongoDB database');
+    return mongoDbInstance;
+  } catch (err) {
+    console.warn('MongoDB connection failed, using local/KV store:', err.message);
+    return null;
+  }
+}
+
+// -------------------------------------------------------------
+// CORE DATA ACCESS (Unifies Local JSON, KV, & Mongo)
+// -------------------------------------------------------------
+async function loadData() {
+  // 1. Try Vercel KV / Upstash if configured
+  if (kvUrl && kvToken) {
+    const kvData = await getFromKv();
+    if (kvData) {
+      memoryCache = kvData;
+      return kvData;
+    }
+  }
+
+  // 2. Try in-memory cache if valid
+  if (memoryCache && Array.isArray(memoryCache.users) && memoryCache.users.length > 0) {
+    return memoryCache;
+  }
+
+  // 3. Fallback to filesystem
   const filePath = getDataFilePath();
   if (!fs.existsSync(filePath)) {
-    const defaultData = { users: [], history: [], favorites: [], glossary: [], feedback: [] };
+    const defaultData = getSeedData();
     try {
       fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
     } catch (e) {
-      console.warn('Filesystem write not permitted, using in-memory fallback:', e.message);
+      console.warn('Filesystem write not permitted:', e.message);
     }
     memoryCache = defaultData;
     return defaultData;
   }
+
   try {
     const raw = fs.readFileSync(filePath, 'utf-8');
     const parsed = JSON.parse(raw);
@@ -53,49 +152,97 @@ function loadData() {
   } catch (e) {
     console.error('Error reading data file:', e.message);
     if (memoryCache) return memoryCache;
-    return { users: [], history: [], favorites: [], glossary: [], feedback: [] };
+    return getSeedData();
   }
 }
 
-function saveData(data) {
+async function saveData(data) {
   memoryCache = data;
+
+  // 1. Save to Vercel KV / Upstash if configured
+  if (kvUrl && kvToken) {
+    await saveToKv(data);
+  }
+
+  // 2. Save to filesystem
   const filePath = getDataFilePath();
   try {
     fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
   } catch (e) {
-    console.warn('Error writing data file (data held in memory):', e.message);
+    console.warn('Error writing data file (held in memory):', e.message);
   }
 }
 
-function findUserByEmail(email) {
+// -------------------------------------------------------------
+// USER AUTHENTICATION & PROFILE METHODS
+// -------------------------------------------------------------
+
+async function findUserByEmail(email) {
   if (!email || typeof email !== 'string') return null;
-  const data = loadData();
   const searchEmail = email.trim().toLowerCase();
-  return data.users.find(
+
+  // Try MongoDB if configured
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      const user = await mdb.collection('users').findOne({ email: searchEmail });
+      if (user) return user;
+    } catch (e) {
+      console.warn('Mongo findUserByEmail error:', e.message);
+    }
+  }
+
+  const data = await loadData();
+  return (data.users || []).find(
     (u) => u && typeof u.email === 'string' && u.email.trim().toLowerCase() === searchEmail
   );
 }
 
-function findUserById(id) {
+async function findUserById(id) {
   if (!id) return null;
-  const data = loadData();
-  return data.users.find((u) => u && u.id === id);
+
+  // Try MongoDB if configured
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      const user = await mdb.collection('users').findOne({ id });
+      if (user) return user;
+    } catch (e) {
+      console.warn('Mongo findUserById error:', e.message);
+    }
+  }
+
+  const data = await loadData();
+  return (data.users || []).find((u) => u && u.id === id);
 }
 
-function updateUserProfile(userId, { name }) {
+async function updateUserProfile(userId, { name }) {
   if (!userId) return null;
-  const data = loadData();
-  const user = data.users.find((u) => u && u.id === userId);
-  if (!user) return null;
-  if (name && typeof name === 'string' && name.trim()) {
-    user.name = name.trim();
+  const cleanName = (name || '').trim();
+
+  // Try MongoDB if configured
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('users').updateOne({ id: userId }, { $set: { name: cleanName } });
+      const user = await mdb.collection('users').findOne({ id: userId });
+      if (user) return { id: user.id, name: user.name, email: user.email };
+    } catch (e) {
+      console.warn('Mongo updateUserProfile error:', e.message);
+    }
   }
-  saveData(data);
+
+  const data = await loadData();
+  const user = (data.users || []).find((u) => u && u.id === userId);
+  if (!user) return null;
+  if (cleanName) {
+    user.name = cleanName;
+  }
+  await saveData(data);
   return { id: user.id, name: user.name, email: user.email };
 }
 
-function createUser({ name, email, passwordHash }) {
-  const data = loadData();
+async function createUser({ name, email, passwordHash }) {
   const cleanName = (name || '').trim();
   const cleanEmail = (email || '').trim().toLowerCase();
 
@@ -106,8 +253,24 @@ function createUser({ name, email, passwordHash }) {
     passwordHash: passwordHash || '',
     createdAt: new Date().toISOString(),
   };
-  data.users.push(newUser);
-  saveData(data);
+
+  // Try MongoDB if configured
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('users').insertOne(newUser);
+    } catch (e) {
+      console.warn('Mongo createUser error:', e.message);
+    }
+  }
+
+  const data = await loadData();
+  // Prevent duplicate insertion
+  if (!data.users.some((u) => u.email.toLowerCase() === cleanEmail)) {
+    data.users.push(newUser);
+    await saveData(data);
+  }
+
   return newUser;
 }
 
@@ -115,17 +278,27 @@ function createUser({ name, email, passwordHash }) {
 // HISTORY (User-scoped)
 // -------------------------------------------------------------
 
-function getUserHistory(userId) {
+async function getUserHistory(userId) {
   if (!userId) return [];
-  const data = loadData();
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      const items = await mdb.collection('history').find({ userId }).sort({ timestamp: -1 }).toArray();
+      if (items && items.length > 0) return items;
+    } catch (e) {
+      console.warn('Mongo getUserHistory error:', e.message);
+    }
+  }
+
+  const data = await loadData();
   return (data.history || [])
     .filter((h) => h && h.userId === userId)
     .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 }
 
-function addUserHistory(userId, entry) {
+async function addUserHistory(userId, entry) {
   if (!userId || !entry) return null;
-  const data = loadData();
   const newHistory = {
     id: entry.id || Date.now(),
     userId,
@@ -135,55 +308,88 @@ function addUserHistory(userId, entry) {
     translated: entry.translated || '',
     timestamp: entry.timestamp || new Date().toISOString(),
   };
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('history').insertOne(newHistory);
+    } catch (e) {
+      console.warn('Mongo addUserHistory error:', e.message);
+    }
+  }
+
+  const data = await loadData();
   data.history.unshift(newHistory);
-  saveData(data);
+  await saveData(data);
   return newHistory;
 }
 
-function deleteUserHistoryItem(userId, itemId) {
+async function deleteUserHistoryItem(userId, itemId) {
   if (!userId || !itemId) return false;
-  const data = loadData();
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('history').deleteOne({ userId, id: itemId });
+    } catch (e) {
+      console.warn('Mongo deleteUserHistoryItem error:', e.message);
+    }
+  }
+
+  const data = await loadData();
   const initialLength = data.history.length;
   data.history = (data.history || []).filter(
     (h) => !(h && h.userId === userId && String(h.id) === String(itemId))
   );
   if (data.history.length !== initialLength) {
-    saveData(data);
+    await saveData(data);
     return true;
   }
   return false;
 }
 
-function clearUserHistory(userId) {
+async function clearUserHistory(userId) {
   if (!userId) return;
-  const data = loadData();
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('history').deleteMany({ userId });
+    } catch (e) {
+      console.warn('Mongo clearUserHistory error:', e.message);
+    }
+  }
+
+  const data = await loadData();
   data.history = (data.history || []).filter((h) => h && h.userId !== userId);
-  saveData(data);
+  await saveData(data);
 }
 
 // -------------------------------------------------------------
 // FAVORITES (User-scoped)
 // -------------------------------------------------------------
 
-function getUserFavorites(userId) {
+async function getUserFavorites(userId) {
   if (!userId) return [];
-  const data = loadData();
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      const items = await mdb.collection('favorites').find({ userId }).sort({ timestamp: -1 }).toArray();
+      if (items && items.length > 0) return items;
+    } catch (e) {
+      console.warn('Mongo getUserFavorites error:', e.message);
+    }
+  }
+
+  const data = await loadData();
   return (data.favorites || [])
     .filter((f) => f && f.userId === userId)
     .sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
 }
 
-function addUserFavorite(userId, item) {
+async function addUserFavorite(userId, item) {
   if (!userId || !item) return null;
-  const data = loadData();
-  if (!Array.isArray(data.favorites)) data.favorites = [];
-
-  // Prevent duplicates for identical original + translated
-  const existing = data.favorites.find(
-    (f) => f.userId === userId && f.original === item.original && f.translated === item.translated
-  );
-  if (existing) return existing;
-
   const newFav = {
     id: item.id || Date.now(),
     userId,
@@ -193,20 +399,55 @@ function addUserFavorite(userId, item) {
     translated: item.translated || '',
     timestamp: item.timestamp || new Date().toISOString(),
   };
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      const existing = await mdb.collection('favorites').findOne({
+        userId,
+        original: item.original,
+        translated: item.translated,
+      });
+      if (!existing) {
+        await mdb.collection('favorites').insertOne(newFav);
+      }
+    } catch (e) {
+      console.warn('Mongo addUserFavorite error:', e.message);
+    }
+  }
+
+  const data = await loadData();
+  if (!Array.isArray(data.favorites)) data.favorites = [];
+
+  const existing = data.favorites.find(
+    (f) => f.userId === userId && f.original === item.original && f.translated === item.translated
+  );
+  if (existing) return existing;
+
   data.favorites.unshift(newFav);
-  saveData(data);
+  await saveData(data);
   return newFav;
 }
 
-function removeUserFavorite(userId, favoriteId) {
+async function removeUserFavorite(userId, favoriteId) {
   if (!userId || !favoriteId) return false;
-  const data = loadData();
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('favorites').deleteOne({ userId, id: favoriteId });
+    } catch (e) {
+      console.warn('Mongo removeUserFavorite error:', e.message);
+    }
+  }
+
+  const data = await loadData();
   const initialLength = (data.favorites || []).length;
   data.favorites = (data.favorites || []).filter(
     (f) => !(f && f.userId === userId && String(f.id) === String(favoriteId))
   );
   if (data.favorites.length !== initialLength) {
-    saveData(data);
+    await saveData(data);
     return true;
   }
   return false;
@@ -216,18 +457,27 @@ function removeUserFavorite(userId, favoriteId) {
 // PERSONAL GLOSSARY (User-scoped)
 // -------------------------------------------------------------
 
-function getUserGlossary(userId) {
+async function getUserGlossary(userId) {
   if (!userId) return [];
-  const data = loadData();
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      const items = await mdb.collection('glossary').find({ userId }).sort({ createdAt: -1 }).toArray();
+      if (items && items.length > 0) return items;
+    } catch (e) {
+      console.warn('Mongo getUserGlossary error:', e.message);
+    }
+  }
+
+  const data = await loadData();
   return (data.glossary || [])
     .filter((g) => g && g.userId === userId)
     .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 }
 
-function addGlossaryTerm(userId, { sourceLang, targetLang, sourceTerm, targetTerm }) {
+async function addGlossaryTerm(userId, { sourceLang, targetLang, sourceTerm, targetTerm }) {
   if (!userId || !sourceTerm || !targetTerm) return null;
-  const data = loadData();
-  if (!Array.isArray(data.glossary)) data.glossary = [];
 
   const newTerm = {
     id: 'term_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -238,36 +488,70 @@ function addGlossaryTerm(userId, { sourceLang, targetLang, sourceTerm, targetTer
     targetTerm: targetTerm.trim(),
     createdAt: new Date().toISOString(),
   };
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('glossary').insertOne(newTerm);
+    } catch (e) {
+      console.warn('Mongo addGlossaryTerm error:', e.message);
+    }
+  }
+
+  const data = await loadData();
+  if (!Array.isArray(data.glossary)) data.glossary = [];
   data.glossary.unshift(newTerm);
-  saveData(data);
+  await saveData(data);
   return newTerm;
 }
 
-function updateGlossaryTerm(userId, termId, { sourceTerm, targetTerm, sourceLang, targetLang }) {
+async function updateGlossaryTerm(userId, termId, { sourceTerm, targetTerm, sourceLang, targetLang }) {
   if (!userId || !termId) return null;
-  const data = loadData();
+
+  const updates = {};
+  if (sourceTerm) updates.sourceTerm = sourceTerm.trim();
+  if (targetTerm) updates.targetTerm = targetTerm.trim();
+  if (sourceLang) updates.sourceLang = sourceLang.toLowerCase().trim();
+  if (targetLang) updates.targetLang = targetLang.toLowerCase().trim();
+  updates.updatedAt = new Date().toISOString();
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('glossary').updateOne({ userId, id: termId }, { $set: updates });
+    } catch (e) {
+      console.warn('Mongo updateGlossaryTerm error:', e.message);
+    }
+  }
+
+  const data = await loadData();
   const term = (data.glossary || []).find((g) => g && g.userId === userId && g.id === termId);
   if (!term) return null;
 
-  if (sourceTerm) term.sourceTerm = sourceTerm.trim();
-  if (targetTerm) term.targetTerm = targetTerm.trim();
-  if (sourceLang) term.sourceLang = sourceLang.toLowerCase().trim();
-  if (targetLang) term.targetLang = targetLang.toLowerCase().trim();
-  term.updatedAt = new Date().toISOString();
-
-  saveData(data);
+  Object.assign(term, updates);
+  await saveData(data);
   return term;
 }
 
-function deleteGlossaryTerm(userId, termId) {
+async function deleteGlossaryTerm(userId, termId) {
   if (!userId || !termId) return false;
-  const data = loadData();
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('glossary').deleteOne({ userId, id: termId });
+    } catch (e) {
+      console.warn('Mongo deleteGlossaryTerm error:', e.message);
+    }
+  }
+
+  const data = await loadData();
   const initialLength = (data.glossary || []).length;
   data.glossary = (data.glossary || []).filter(
     (g) => !(g && g.userId === userId && g.id === termId)
   );
   if (data.glossary.length !== initialLength) {
-    saveData(data);
+    await saveData(data);
     return true;
   }
   return false;
@@ -277,10 +561,7 @@ function deleteGlossaryTerm(userId, termId) {
 // TRANSLATION FEEDBACK (User-scoped)
 // -------------------------------------------------------------
 
-function addFeedback(userId, { sourceLang, targetLang, original, translated, helpful, reason, comments }) {
-  const data = loadData();
-  if (!Array.isArray(data.feedback)) data.feedback = [];
-
+async function addFeedback(userId, { sourceLang, targetLang, original, translated, helpful, reason, comments }) {
   const newFeedback = {
     id: 'fb_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
     userId: userId || 'anonymous',
@@ -293,8 +574,20 @@ function addFeedback(userId, { sourceLang, targetLang, original, translated, hel
     comments: comments || '',
     createdAt: new Date().toISOString(),
   };
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('feedback').insertOne(newFeedback);
+    } catch (e) {
+      console.warn('Mongo addFeedback error:', e.message);
+    }
+  }
+
+  const data = await loadData();
+  if (!Array.isArray(data.feedback)) data.feedback = [];
   data.feedback.push(newFeedback);
-  saveData(data);
+  await saveData(data);
   return newFeedback;
 }
 
@@ -302,7 +595,7 @@ function addFeedback(userId, { sourceLang, targetLang, original, translated, hel
 // TRANSLATION ANALYTICS (User-scoped aggregation)
 // -------------------------------------------------------------
 
-function getUserAnalytics(userId) {
+async function getUserAnalytics(userId) {
   if (!userId) {
     return {
       totalTranslations: 0,
@@ -314,8 +607,8 @@ function getUserAnalytics(userId) {
     };
   }
 
-  const history = getUserHistory(userId);
-  const favorites = getUserFavorites(userId);
+  const history = await getUserHistory(userId);
+  const favorites = await getUserFavorites(userId);
 
   let totalCharacters = 0;
   const langSet = new Set();
@@ -376,4 +669,3 @@ module.exports = {
   addFeedback,
   getUserAnalytics,
 };
-

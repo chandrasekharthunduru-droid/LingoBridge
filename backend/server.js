@@ -50,24 +50,28 @@ function generateToken(user) {
 
 // POST /api/auth/register or /auth/register
 app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   try {
     const { name, email, password } = req.body || {};
 
-    if (!name || !name.trim()) {
+    if (!name || typeof name !== 'string' || !name.trim()) {
       return res.status(400).json({
         success: false,
         message: 'Name is required.',
         error: 'Name is required.',
       });
     }
-    if (!email || !email.includes('@')) {
+
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes('@')) {
       return res.status(400).json({
         success: false,
         message: 'Please enter a valid email address.',
         error: 'Please enter a valid email address.',
       });
     }
-    if (!password || password.length < 6) {
+
+    if (!password || typeof password !== 'string' || password.length < 6) {
       return res.status(400).json({
         success: false,
         message: 'Password must be at least 6 characters long.',
@@ -75,17 +79,21 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
       });
     }
 
-    const existingUser = findUserByEmail(email);
+    const existingUser = await findUserByEmail(normalizedEmail);
     if (existingUser) {
-      return res.status(400).json({
+      return res.status(409).json({
         success: false,
-        message: 'Email already exists',
+        message: 'An account with this email already exists.',
         error: 'Email already exists',
       });
     }
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const newUser = createUser({ name: name.trim(), email: email.trim(), passwordHash });
+    const newUser = await createUser({
+      name: name.trim(),
+      email: normalizedEmail,
+      passwordHash,
+    });
 
     const token = generateToken(newUser);
 
@@ -104,7 +112,7 @@ app.post(['/api/auth/register', '/auth/register'], async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Failed to register user. Please try again.',
-      error: 'Failed to register user. Please try again.',
+      error: err.message || 'Internal server error',
     });
   }
 });
@@ -123,8 +131,8 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
       });
     }
 
-    const cleanEmail = email.trim();
-    if (!cleanEmail || !cleanEmail.includes('@')) {
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail || !normalizedEmail.includes('@')) {
       return res.status(400).json({
         success: false,
         message: 'Please enter a valid email address.',
@@ -132,7 +140,7 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
       });
     }
 
-    const user = findUserByEmail(cleanEmail);
+    const user = await findUserByEmail(normalizedEmail);
     if (!user || !user.passwordHash) {
       return res.status(401).json({
         success: false,
@@ -184,8 +192,8 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
 });
 
 // GET /api/auth/me or /auth/me
-app.get(['/api/auth/me', '/auth/me'], authenticateToken, (req, res) => {
-  const user = findUserById(req.user.id);
+app.get(['/api/auth/me', '/auth/me'], authenticateToken, async (req, res) => {
+  const user = await findUserById(req.user.id);
   if (!user) {
     return res.status(404).json({
       success: false,
@@ -205,7 +213,7 @@ app.get(['/api/auth/me', '/auth/me'], authenticateToken, (req, res) => {
 });
 
 // PUT /api/user/profile or /user/profile
-app.put(['/api/user/profile', '/user/profile'], authenticateToken, (req, res) => {
+app.put(['/api/user/profile', '/user/profile'], authenticateToken, async (req, res) => {
   const { name } = req.body || {};
   if (!name || typeof name !== 'string' || !name.trim()) {
     return res.status(400).json({
@@ -215,7 +223,7 @@ app.put(['/api/user/profile', '/user/profile'], authenticateToken, (req, res) =>
     });
   }
 
-  const updatedUser = updateUserProfile(req.user.id, { name: name.trim() });
+  const updatedUser = await updateUserProfile(req.user.id, { name: name.trim() });
   if (!updatedUser) {
     return res.status(404).json({
       success: false,
@@ -236,24 +244,24 @@ app.put(['/api/user/profile', '/user/profile'], authenticateToken, (req, res) =>
 // -------------------------------------------------------------
 
 // GET /api/history or /history
-app.get(['/api/history', '/history'], authenticateToken, (req, res) => {
-  const history = getUserHistory(req.user.id);
+app.get(['/api/history', '/history'], authenticateToken, async (req, res) => {
+  const history = await getUserHistory(req.user.id);
   return res.json({ success: true, history });
 });
 
 // POST /api/history or /history
-app.post(['/api/history', '/history'], authenticateToken, (req, res) => {
+app.post(['/api/history', '/history'], authenticateToken, async (req, res) => {
   const { sourceLang, targetLang, original, translated } = req.body || {};
   if (!original || !translated) {
     return res.status(400).json({ success: false, error: 'Invalid history payload.' });
   }
-  const entry = addUserHistory(req.user.id, { sourceLang, targetLang, original, translated });
+  const entry = await addUserHistory(req.user.id, { sourceLang, targetLang, original, translated });
   return res.status(201).json({ success: true, entry });
 });
 
 // DELETE /api/history/:id or /history/:id
-app.delete(['/api/history/:id', '/history/:id'], authenticateToken, (req, res) => {
-  const success = deleteUserHistoryItem(req.user.id, req.params.id);
+app.delete(['/api/history/:id', '/history/:id'], authenticateToken, async (req, res) => {
+  const success = await deleteUserHistoryItem(req.user.id, req.params.id);
   if (!success) {
     return res.status(404).json({ success: false, message: 'History item not found.' });
   }
@@ -261,8 +269,8 @@ app.delete(['/api/history/:id', '/history/:id'], authenticateToken, (req, res) =
 });
 
 // DELETE /api/history or /history
-app.delete(['/api/history', '/history'], authenticateToken, (req, res) => {
-  clearUserHistory(req.user.id);
+app.delete(['/api/history', '/history'], authenticateToken, async (req, res) => {
+  await clearUserHistory(req.user.id);
   return res.json({ success: true, message: 'History cleared successfully.' });
 });
 
@@ -271,24 +279,24 @@ app.delete(['/api/history', '/history'], authenticateToken, (req, res) => {
 // -------------------------------------------------------------
 
 // GET /api/favorites or /favorites
-app.get(['/api/favorites', '/favorites'], authenticateToken, (req, res) => {
-  const favorites = getUserFavorites(req.user.id);
+app.get(['/api/favorites', '/favorites'], authenticateToken, async (req, res) => {
+  const favorites = await getUserFavorites(req.user.id);
   return res.json({ success: true, favorites });
 });
 
 // POST /api/favorites or /favorites
-app.post(['/api/favorites', '/favorites'], authenticateToken, (req, res) => {
+app.post(['/api/favorites', '/favorites'], authenticateToken, async (req, res) => {
   const { sourceLang, targetLang, original, translated } = req.body || {};
   if (!original || !translated) {
     return res.status(400).json({ success: false, message: 'Original and translated text are required.' });
   }
-  const favorite = addUserFavorite(req.user.id, { sourceLang, targetLang, original, translated });
+  const favorite = await addUserFavorite(req.user.id, { sourceLang, targetLang, original, translated });
   return res.status(201).json({ success: true, favorite });
 });
 
 // DELETE /api/favorites/:id or /favorites/:id
-app.delete(['/api/favorites/:id', '/favorites/:id'], authenticateToken, (req, res) => {
-  const success = removeUserFavorite(req.user.id, req.params.id);
+app.delete(['/api/favorites/:id', '/favorites/:id'], authenticateToken, async (req, res) => {
+  const success = await removeUserFavorite(req.user.id, req.params.id);
   if (!success) {
     return res.status(404).json({ success: false, message: 'Favorite item not found.' });
   }
@@ -300,25 +308,25 @@ app.delete(['/api/favorites/:id', '/favorites/:id'], authenticateToken, (req, re
 // -------------------------------------------------------------
 
 // GET /api/glossary or /glossary
-app.get(['/api/glossary', '/glossary'], authenticateToken, (req, res) => {
-  const terms = getUserGlossary(req.user.id);
+app.get(['/api/glossary', '/glossary'], authenticateToken, async (req, res) => {
+  const terms = await getUserGlossary(req.user.id);
   return res.json({ success: true, terms });
 });
 
 // POST /api/glossary or /glossary
-app.post(['/api/glossary', '/glossary'], authenticateToken, (req, res) => {
+app.post(['/api/glossary', '/glossary'], authenticateToken, async (req, res) => {
   const { sourceLang, targetLang, sourceTerm, targetTerm } = req.body || {};
   if (!sourceTerm || !targetTerm) {
     return res.status(400).json({ success: false, message: 'Source term and target term are required.' });
   }
-  const term = addGlossaryTerm(req.user.id, { sourceLang, targetLang, sourceTerm, targetTerm });
+  const term = await addGlossaryTerm(req.user.id, { sourceLang, targetLang, sourceTerm, targetTerm });
   return res.status(201).json({ success: true, term });
 });
 
 // PUT /api/glossary/:id or /glossary/:id
-app.put(['/api/glossary/:id', '/glossary/:id'], authenticateToken, (req, res) => {
+app.put(['/api/glossary/:id', '/glossary/:id'], authenticateToken, async (req, res) => {
   const { sourceTerm, targetTerm, sourceLang, targetLang } = req.body || {};
-  const term = updateGlossaryTerm(req.user.id, req.params.id, { sourceTerm, targetTerm, sourceLang, targetLang });
+  const term = await updateGlossaryTerm(req.user.id, req.params.id, { sourceTerm, targetTerm, sourceLang, targetLang });
   if (!term) {
     return res.status(404).json({ success: false, message: 'Glossary term not found.' });
   }
@@ -326,8 +334,8 @@ app.put(['/api/glossary/:id', '/glossary/:id'], authenticateToken, (req, res) =>
 });
 
 // DELETE /api/glossary/:id or /glossary/:id
-app.delete(['/api/glossary/:id', '/glossary/:id'], authenticateToken, (req, res) => {
-  const success = deleteGlossaryTerm(req.user.id, req.params.id);
+app.delete(['/api/glossary/:id', '/glossary/:id'], authenticateToken, async (req, res) => {
+  const success = await deleteGlossaryTerm(req.user.id, req.params.id);
   if (!success) {
     return res.status(404).json({ success: false, message: 'Glossary term not found.' });
   }
@@ -339,7 +347,7 @@ app.delete(['/api/glossary/:id', '/glossary/:id'], authenticateToken, (req, res)
 // -------------------------------------------------------------
 
 // POST /api/feedback or /feedback
-app.post(['/api/feedback', '/feedback'], (req, res) => {
+app.post(['/api/feedback', '/feedback'], async (req, res) => {
   let userId = null;
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
@@ -351,7 +359,7 @@ app.post(['/api/feedback', '/feedback'], (req, res) => {
   }
 
   const { sourceLang, targetLang, original, translated, helpful, reason, comments } = req.body || {};
-  const feedback = addFeedback(userId, { sourceLang, targetLang, original, translated, helpful, reason, comments });
+  const feedback = await addFeedback(userId, { sourceLang, targetLang, original, translated, helpful, reason, comments });
   return res.status(201).json({ success: true, message: 'Thank you for your feedback!', feedback });
 });
 
@@ -360,8 +368,8 @@ app.post(['/api/feedback', '/feedback'], (req, res) => {
 // -------------------------------------------------------------
 
 // GET /api/analytics or /analytics
-app.get(['/api/analytics', '/analytics'], authenticateToken, (req, res) => {
-  const analytics = getUserAnalytics(req.user.id);
+app.get(['/api/analytics', '/analytics'], authenticateToken, async (req, res) => {
+  const analytics = await getUserAnalytics(req.user.id);
   return res.json({ success: true, analytics });
 });
 
@@ -482,8 +490,8 @@ app.post(['/translate', '/api/translate'], async (req, res) => {
 
   if (userId) {
     try {
-      const glossary = getUserGlossary(userId);
-      const applicableTerms = glossary.filter(
+      const glossary = await getUserGlossary(userId);
+      const applicableTerms = (glossary || []).filter(
         (g) =>
           (!g.sourceLang || g.sourceLang === 'auto' || g.sourceLang === sourceLang || g.sourceLang === detectedSource) &&
           (!g.targetLang || g.targetLang === targetLang)
