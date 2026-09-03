@@ -1,0 +1,521 @@
+{
+  "users": [
+    {
+      "id": "user_1788278306421_nzq2a",
+      "name": "Alice Smith",
+      "email": "alice@example.com",
+      "passwordHash": "$2b$10$Aj.Wt5s9uQkdSUmM3ForHe162K3boQT8FWrknghJTa.89KteYNdIO",
+      "createdAt": "2026-09-01T15:58:26.421Z"
+    },
+    {
+      "id": "user_demo_account_12345",
+      "name": "Demo User",
+      "email": "demo@example.com",
+      "passwordHash": "$2b$10$Aj.Wt5s9uQkdSUmM3ForHe162K3boQT8FWrknghJTa.89KteYNdIO",
+      "createdAt": "2026-09-01T16:00:00.000Z"
+    },
+    {
+      "id": "user_1788367434826_og5fl",
+      "name": "New User",
+      "email": "newuser_1788367434764@example.com",
+      "passwordHash": "$2b$10$jE.T8e1lwXj.qShBrN5BO.awwbB.kh3oFphT37KTLsSEIiMXVIHni",
+      "createdAt": "2026-09-02T16:43:54.826Z"
+    },
+    {
+      "id": "user_1788367735799_5c5iw",
+      "name": "Jane Smith",
+      "email": "jane@example.com",
+      "passwordHash": "$2b$10$G2BYc2ntvENu8zsmeZF0PuYDfBLn1prPw.bEEKWEzfOcNsFtBD/sS",
+      "createdAt": "2026-09-02T16:48:55.799Z"
+    },
+    {
+      "id": "user_1788370651585_xbnsg",
+      "name": "Test User",
+      "email": "test_1788370651440@example.com",
+      "passwordHash": "$2b$10$gdN/6zOE5YDfsxGgGAT1luY65E937KnFo6Hi0fsAOeNXJ/jjicHBW",
+      "createdAt": "2026-09-02T17:37:31.586Z"
+    },
+    {
+      "id": "user_1788370989207_bgljz",
+      "name": "Verification User",
+      "email": "user_1788370989131@example.com",
+      "passwordHash": "$2b$10$sN2xnTpE/RV6cZY4SJmXLO6OCiGMu5KFIU6kWs2zDha7aGOqzjC9u",
+      "createdAt": "2026-09-02T17:43:09.207Z"
+    },
+    {
+      "id": "user_1788371001347_0ki2p",
+      "name": "Me Test",
+      "email": "metest_1788371001197@example.com",
+      "passwordHash": "$2b$10$/Qr0bBXjzq9KIUa1Ilso3.wD/U3Rdq3LmmV2bllhdykyCq1ubA3Wu",
+      "createdAt": "2026-09-02T17:43:21.347Z"
+    },
+    {
+      "id": "user_1788371014814_2zek1",
+      "name": "Dup User",
+      "email": "dup_1788371014654@example.com",
+      "passwordHash": "$2b$10$ShsnQL/BsnrcfO1KoXyJa.nMvIQCGUGoQfN49UjbdwDkNyw08EkEm",
+      "createdAt": "2026-09-02T17:43:34.814Z"
+    },
+    {
+      "id": "user_1788411838285_rpibb",
+      "name": "Test User",
+      "email": "test_1788411838125@example.com",
+      "passwordHash": "$2b$10$rcIwhZYj04SvDb8bLyO4SO7yL9fn8FsC2BBw1MyS0n5dQKM55Hiri",
+      "createdAt": "2026-09-03T05:03:58.285Z"
+    },
+    {
+      "id": "user_1788411990971_2a89w",
+      "name": "Flow User",
+      "email": "flow_1788411990864@example.com",
+      "passwordHash": "$2b$10$i3L6QrhW77JtY7B41CKrXu2OhwnhJutI69L1cpPEAeE1XMIw22zym",
+      "createdAt": "2026-09-03T05:06:30.972Z"
+    },
+    {
+      "id": "user_1788412266600_i2tff",
+      "name": "Thunduru Chandra sekhar",
+      "email": "chandrathunduru@gmail.com",
+      "passwordHash": "$2b$10$GIHaCsix7FhiVRZH28CQCu6r.NuVlV9awrG2heulmVfEq2T68Nic.",
+      "createdAt": "2026-09-03T05:11:06.600Z"
+    }
+  ],
+  "history": [
+    {
+      "id": 1788413472429,
+      "userId": "user_1788412266600_i2tff",
+      "sourceLang": "hi",
+      "targetLang": "te",
+      "original": "google-genai\ngradio",
+      "translated": "google-genai\nగ్రేడియో",
+      "timestamp": "2026-09-03T05:31:12.429Z"
+    },
+    {
+      "id": 1788413471151,
+      "userId": "user_1788412266600_i2tff",
+      "sourceLang": "hi",
+      "targetLang": "te",
+      "original": "google-genai\ngradio",
+      "translated": "google-genai\nగ్రేడియో",
+      "timestamp": "2026-09-03T05:31:11.151Z"
+    },
+    {
+      "id": 1788413467316,
+      "userId": "user_1788412266600_i2tff",
+      "sourceLang": "hi",
+      "targetLang": "kn",
+      "original": "google-genai\ngradio",
+      "translated": "google-genai\nಗ್ರೇಡಿಯೋ",
+      "timestamp": "2026-09-03T05:31:07.316Z"
+    },
+    {
+      "id": 1788341411863,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "hi",
+      "targetLang": "de",
+      "original": "chandra sekhar",
+      "translated": "Chandra Sekhar",
+      "timestamp": "2026-09-02T09:30:11.863Z"
+    },
+    {
+      "id": 1788341396604,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "hi",
+      "targetLang": "kn",
+      "original": "chandra sekhar",
+      "translated": "ಚಂದ್ರಶೇಖರ್",
+      "timestamp": "2026-09-02T09:29:56.604Z"
+    },
+    {
+      "id": 1788341389373,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "hi",
+      "targetLang": "ta",
+      "original": "chandra sekhar",
+      "translated": "சந்திர சேகர்",
+      "timestamp": "2026-09-02T09:29:49.373Z"
+    },
+    {
+      "id": 1788341382197,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "hi",
+      "targetLang": "te",
+      "original": "chandra sekhar",
+      "translated": "చంద్ర శేఖర్",
+      "timestamp": "2026-09-02T09:29:42.197Z"
+    },
+    {
+      "id": 1788341378199,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "hi",
+      "targetLang": "hi",
+      "original": "chandra sekhar",
+      "translated": "chandra sekhar",
+      "timestamp": "2026-09-02T09:29:38.199Z"
+    },
+    {
+      "id": 1788341377074,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "hi",
+      "targetLang": "hi",
+      "original": "chandra sekhar",
+      "translated": "chandra sekhar",
+      "timestamp": "2026-09-02T09:29:37.074Z"
+    },
+    {
+      "id": 1788341371034,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "hi",
+      "targetLang": "de",
+      "original": "chandra sekhar",
+      "translated": "Chandra Sekhar",
+      "timestamp": "2026-09-02T09:29:31.034Z"
+    },
+    {
+      "id": 1788341340524,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "kn",
+      "original": "hii bro how are u where are u from ",
+      "translated": "ಹಾಯ್ ಸಹೋದರ ಹೇಗಿದ್ದೀಯ ನೀನು ಎಲ್ಲಿಂದ ಬಂದಿರುವೆ",
+      "timestamp": "2026-09-02T09:29:00.524Z"
+    },
+    {
+      "id": 1788341274781,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "hi",
+      "targetLang": "ja",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem ",
+      "translated": "このテキストを暖かく、フレンドリーでアクセスしやすい場所に書き直してください: そこに何年いますか",
+      "timestamp": "2026-09-02T09:27:54.781Z"
+    },
+    {
+      "id": 1788341269726,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "ja",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem ",
+      "translated": "Reescreva este texto emum tom caloroso、amigável e accessível: quantos anos você tem",
+      "timestamp": "2026-09-02T09:27:49.726Z"
+    },
+    {
+      "id": 1788341132852,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "kn",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem ",
+      "translated": "ರೀಸ್ಕ್ರೆವಾ ಈ ಟೆಕ್ಸ್ಟೋ ಎಮ್ ಉಮ್ ಟಾಮ್ ಕ್ಯಾಲೊರೊಸೊ, ಅಮಿಗಾವೆಲ್ ಮತ್ತು ಅಸೆಸ್ಸಿವೆಲ್: ಕ್ವಾಂಟೋಸ್ ಅನೋಸ್ ವೋಕ್ ಟೆಮ್",
+      "timestamp": "2026-09-02T09:25:32.853Z"
+    },
+    {
+      "id": 1788341091794,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "pt",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem ",
+      "translated": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem",
+      "timestamp": "2026-09-02T09:24:51.794Z"
+    },
+    {
+      "id": 1788341083905,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "es",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem ",
+      "translated": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem",
+      "timestamp": "2026-09-02T09:24:43.905Z"
+    },
+    {
+      "id": 1788341051236,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "ja",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem ",
+      "translated": "このテキストを温かく、フレンドリーで親しみやすい口調で書き直してください: あなたは何歳ですか",
+      "timestamp": "2026-09-02T09:24:11.236Z"
+    },
+    {
+      "id": 1788341037618,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "ko",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem ",
+      "translated": "이 텍스트를 따뜻하고 친근하며 다가가기 쉬운 어조로 다시 작성하세요: 당신은 몇 살입니까?",
+      "timestamp": "2026-09-02T09:23:57.618Z"
+    },
+    {
+      "id": 1788341024819,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "zh",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem ",
+      "translated": "用热情、友好、平易近人的语气重写这段文字：你多大了？",
+      "timestamp": "2026-09-02T09:23:44.819Z"
+    },
+    {
+      "id": 1788341019871,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "ar",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem ",
+      "translated": "أعد كتابة هذا النص بنبرة دافئة وودية ودودة: كم عمرك؟",
+      "timestamp": "2026-09-02T09:23:39.871Z"
+    },
+    {
+      "id": 1788341009150,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "ar",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem ?",
+      "translated": "أعد كتابة هذا النص بنبرة دافئة وودية ودودة: كم عمرك؟",
+      "timestamp": "2026-09-02T09:23:29.150Z"
+    },
+    {
+      "id": 1788340993013,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "ar",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem",
+      "translated": "أعد كتابة هذا النص بنبرة دافئة وودية ودودة: كم عمرك؟",
+      "timestamp": "2026-09-02T09:23:13.013Z"
+    },
+    {
+      "id": 1788340984984,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "ru",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem",
+      "translated": "Перепишите этот текст теплым, дружелюбным и доступным тоном: Сколько вам лет?",
+      "timestamp": "2026-09-02T09:23:04.984Z"
+    },
+    {
+      "id": 1788340920267,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "hi",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem",
+      "translated": "इस पाठ को गर्मजोशीपूर्ण, मैत्रीपूर्ण और सुलभ लहजे में दोबारा लिखें: आपकी उम्र कितनी है",
+      "timestamp": "2026-09-02T09:22:00.267Z"
+    },
+    {
+      "id": 1788340912893,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "te",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem",
+      "translated": "ఈ వచనాన్ని వెచ్చగా, స్నేహపూర్వకంగా మరియు చేరువయ్యే స్వరంలో తిరిగి వ్రాయండి: మీ వయస్సు ఎంత",
+      "timestamp": "2026-09-02T09:21:52.893Z"
+    },
+    {
+      "id": 1788340903995,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "de",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem",
+      "translated": "Schreiben Sie diesen Text in einem warmen, freundlichen und zugänglichen Ton um: Wie alt sind Sie?",
+      "timestamp": "2026-09-02T09:21:43.995Z"
+    },
+    {
+      "id": 1788340874802,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "pt",
+      "targetLang": "de",
+      "original": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem",
+      "translated": "Schreiben Sie diesen Text in einem warmen, freundlichen und zugänglichen Ton um: Wie alt sind Sie?",
+      "timestamp": "2026-09-02T09:21:14.802Z"
+    },
+    {
+      "id": 1788339451135,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "pt",
+      "original": "Rewrite this text in a warm, friendly, and approachable tone: how old are you",
+      "translated": "Reescreva este texto em um tom caloroso, amigável e acessível: quantos anos você tem",
+      "timestamp": "2026-09-02T08:57:31.135Z"
+    },
+    {
+      "id": 1788339426153,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "ru",
+      "original": "Rewrite this text in a warm, friendly, and approachable tone: how old are you",
+      "translated": "Перепишите этот текст теплым, дружелюбным и доступным тоном: сколько вам лет?",
+      "timestamp": "2026-09-02T08:57:06.153Z"
+    },
+    {
+      "id": 1788339412121,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "ar",
+      "original": "Rewrite this text in a warm, friendly, and approachable tone: how old are you",
+      "translated": "أعد كتابة هذا النص بنبرة دافئة وودية وودودة: كم عمرك؟",
+      "timestamp": "2026-09-02T08:56:52.121Z"
+    },
+    {
+      "id": 1788339401878,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "ja",
+      "original": "Rewrite this text in a warm, friendly, and approachable tone: how old are you",
+      "translated": "このテキストを温かく、フレンドリーで親しみやすい口調で書き直してください: あなたは何歳ですか",
+      "timestamp": "2026-09-02T08:56:41.878Z"
+    },
+    {
+      "id": 1788339392868,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "bn",
+      "original": "Rewrite this text in a warm, friendly, and approachable tone: how old are you",
+      "translated": "এই পাঠ্যটি একটি উষ্ণ, বন্ধুত্বপূর্ণ এবং যোগাযোগযোগ্য স্বরে লিখুন: আপনার বয়স কত",
+      "timestamp": "2026-09-02T08:56:32.868Z"
+    },
+    {
+      "id": 1788339386310,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "mr",
+      "original": "Rewrite this text in a warm, friendly, and approachable tone: how old are you",
+      "translated": "हा मजकूर उबदार, मैत्रीपूर्ण आणि जवळ येण्याजोगा टोनमध्ये पुन्हा लिहा: तुमचे वय किती आहे",
+      "timestamp": "2026-09-02T08:56:26.310Z"
+    },
+    {
+      "id": 1788339378856,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "ta",
+      "original": "Rewrite this text in a warm, friendly, and approachable tone: how old are you",
+      "translated": "இந்த உரையை அன்பான, நட்பு மற்றும் அணுகக்கூடிய தொனியில் மீண்டும் எழுதவும்: உங்களுக்கு எவ்வளவு வயது",
+      "timestamp": "2026-09-02T08:56:18.856Z"
+    },
+    {
+      "id": 1788339371543,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "ml",
+      "original": "Rewrite this text in a warm, friendly, and approachable tone: how old are you",
+      "translated": "ഊഷ്മളവും സൗഹൃദപരവും സമീപിക്കാവുന്നതുമായ സ്വരത്തിൽ ഈ വാചകം മാറ്റിയെഴുതുക: നിങ്ങൾക്ക് എത്ര വയസ്സായി",
+      "timestamp": "2026-09-02T08:56:11.543Z"
+    },
+    {
+      "id": 1788339362966,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "hi",
+      "original": "Rewrite this text in a warm, friendly, and approachable tone: how old are you",
+      "translated": "इस पाठ को गर्मजोशीपूर्ण, मैत्रीपूर्ण और सुलभ लहजे में दोबारा लिखें: आपकी उम्र कितनी है",
+      "timestamp": "2026-09-02T08:56:02.966Z"
+    },
+    {
+      "id": 1788339335035,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "te",
+      "original": "Rewrite this text in a warm, friendly, and approachable tone: how old are you",
+      "translated": "ఈ వచనాన్ని వెచ్చగా, స్నేహపూర్వకంగా మరియు చేరువయ్యే స్వరంలో తిరిగి వ్రాయండి: మీ వయస్సు ఎంత",
+      "timestamp": "2026-09-02T08:55:35.035Z"
+    },
+    {
+      "id": 1788339281128,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "te",
+      "original": "how old are you",
+      "translated": "నీ వయసు ఎంత",
+      "timestamp": "2026-09-02T08:54:41.128Z"
+    },
+    {
+      "id": 1788338050432,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "te",
+      "targetLang": "hi",
+      "original": "what is your name",
+      "translated": "आपका क्या नाम है",
+      "timestamp": "2026-09-02T08:34:10.432Z"
+    },
+    {
+      "id": 1788278324305,
+      "userId": "user_1788278306421_nzq2a",
+      "sourceLang": "en",
+      "targetLang": "es",
+      "original": "Hello world",
+      "translated": "Hola Mundo",
+      "timestamp": "2026-09-01T15:58:44.305Z"
+    }
+  ],
+  "favorites": [
+    {
+      "id": 1788413200983,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "te",
+      "original": "Welcome to LingoBridge",
+      "translated": "లింగోబ్రిడ్జ్ కు స్వాగతం",
+      "timestamp": "2026-09-03T05:26:40.983Z"
+    },
+    {
+      "id": 1788412928578,
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "te",
+      "original": "Hello test",
+      "translated": "హలో టెస్ట్",
+      "timestamp": "2026-09-03T05:22:08.578Z"
+    }
+  ],
+  "glossary": [
+    {
+      "id": "term_1788413138398_ogoq",
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "te",
+      "sourceTerm": "LingoBridge",
+      "targetTerm": "లింగోబ్రిడ్జ్",
+      "createdAt": "2026-09-03T05:25:38.398Z"
+    },
+    {
+      "id": "term_1788412928603_853o",
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "te",
+      "sourceTerm": "Internship",
+      "targetTerm": "ఇంటర్న్‌షిప్",
+      "createdAt": "2026-09-03T05:22:08.603Z"
+    }
+  ],
+  "feedback": [
+    {
+      "id": "fb_1788412928671_h9al",
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "te",
+      "original": "Hello",
+      "translated": "హలో",
+      "helpful": true,
+      "reason": "",
+      "comments": "",
+      "createdAt": "2026-09-03T05:22:08.672Z"
+    },
+    {
+      "id": "fb_1788413138898_q3ms",
+      "userId": "user_demo_account_12345",
+      "sourceLang": "en",
+      "targetLang": "te",
+      "original": "Welcome",
+      "translated": "",
+      "helpful": true,
+      "reason": "",
+      "comments": "",
+      "createdAt": "2026-09-03T05:25:38.898Z"
+    },
+    {
+      "id": "fb_1788413429871_bmy9",
+      "userId": "user_1788412266600_i2tff",
+      "sourceLang": "hi",
+      "targetLang": "kn",
+      "original": "chandra sekhar",
+      "translated": "ಚಂದ್ರಶೇಖರ್",
+      "helpful": true,
+      "reason": "",
+      "comments": "",
+      "createdAt": "2026-09-03T05:30:29.871Z"
+    }
+  ]
+}
