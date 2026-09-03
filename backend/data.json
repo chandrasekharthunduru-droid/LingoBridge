@@ -76,6 +76,20 @@
       "email": "chandrathunduru@gmail.com",
       "passwordHash": "$2b$10$GIHaCsix7FhiVRZH28CQCu6r.NuVlV9awrG2heulmVfEq2T68Nic.",
       "createdAt": "2026-09-03T05:11:06.600Z"
+    },
+    {
+      "id": "user_1788418084539_8lk4n",
+      "name": "Debug User",
+      "email": "debug_user_browser@example.com",
+      "passwordHash": "$2b$10$FEu86rvTxigD9V4hLU8J3usk.xmbxrYZLhmCBq3rL4HxNRLPXqhHK",
+      "createdAt": "2026-09-03T06:48:04.539Z"
+    },
+    {
+      "id": "user_1788418377459_v59w2",
+      "name": "Persistent Tester",
+      "email": "persistent_tester_1788418377317@example.com",
+      "passwordHash": "$2b$10$BGyqmN.GiyhsnZfOVKyaZeTf1Tj8eX6N7oTdkGLQBzBK4ODkgHdVG",
+      "createdAt": "2026-09-03T06:52:57.459Z"
     }
   ],
   "history": [

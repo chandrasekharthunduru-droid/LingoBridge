@@ -120,12 +120,7 @@ async function loadData() {
     }
   }
 
-  // 2. Try in-memory cache if valid
-  if (memoryCache && Array.isArray(memoryCache.users) && memoryCache.users.length > 0) {
-    return memoryCache;
-  }
-
-  // 3. Fallback to filesystem
+  // 2. Read from filesystem
   const filePath = getDataFilePath();
   if (!fs.existsSync(filePath)) {
     const defaultData = getSeedData();
@@ -151,7 +146,7 @@ async function loadData() {
     return memoryCache;
   } catch (e) {
     console.error('Error reading data file:', e.message);
-    if (memoryCache) return memoryCache;
+    if (memoryCache && Array.isArray(memoryCache.users)) return memoryCache;
     return getSeedData();
   }
 }
@@ -266,7 +261,7 @@ async function createUser({ name, email, passwordHash }) {
 
   const data = await loadData();
   // Prevent duplicate insertion
-  if (!data.users.some((u) => u.email.toLowerCase() === cleanEmail)) {
+  if (!data.users.some((u) => u && typeof u.email === 'string' && u.email.trim().toLowerCase() === cleanEmail)) {
     data.users.push(newUser);
     await saveData(data);
   }

@@ -141,11 +141,19 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
     }
 
     const user = await findUserByEmail(normalizedEmail);
-    if (!user || !user.passwordHash) {
+    if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password.',
-        error: 'Invalid email or password.',
+        message: 'No account found with this email address. Please sign up.',
+        error: 'User not found',
+      });
+    }
+
+    if (!user.passwordHash) {
+      return res.status(401).json({
+        success: false,
+        message: 'Account has no password set.',
+        error: 'No password hash',
       });
     }
 
@@ -154,18 +162,18 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
       isMatch = await bcrypt.compare(password, user.passwordHash);
     } catch (bcryptErr) {
       console.error('Bcrypt comparison error:', bcryptErr);
-      return res.status(401).json({
+      return res.status(500).json({
         success: false,
-        message: 'Invalid email or password.',
-        error: 'Invalid email or password.',
+        message: 'Authentication service error during password verification.',
+        error: bcryptErr.message || 'Bcrypt error',
       });
     }
 
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid email or password.',
-        error: 'Invalid email or password.',
+        message: 'Incorrect password. Please try again.',
+        error: 'Invalid password',
       });
     }
 

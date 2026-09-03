@@ -82,7 +82,7 @@ export function AuthProvider({ children }) {
   }, [token]);
 
   const login = async (email, password) => {
-    const cleanEmail = typeof email === 'string' ? email.trim() : email;
+    const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : email;
     const { data } = await safeFetchJson('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -101,7 +101,7 @@ export function AuthProvider({ children }) {
 
   const register = async (name, email, password) => {
     const cleanName = typeof name === 'string' ? name.trim() : name;
-    const cleanEmail = typeof email === 'string' ? email.trim() : email;
+    const cleanEmail = typeof email === 'string' ? email.trim().toLowerCase() : email;
     const { data } = await safeFetchJson('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
