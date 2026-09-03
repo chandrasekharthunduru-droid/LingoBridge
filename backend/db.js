@@ -246,7 +246,9 @@ async function createUser({ name, email, passwordHash }) {
     name: cleanName,
     email: cleanEmail,
     passwordHash: passwordHash || '',
+    authProvider: 'local',
     createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 
   // Try MongoDB if configured
@@ -267,6 +269,95 @@ async function createUser({ name, email, passwordHash }) {
   }
 
   return newUser;
+}
+
+async function findUserByGoogleId(googleId) {
+  if (!googleId || typeof googleId !== 'string') return null;
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      const user = await mdb.collection('users').findOne({ googleId });
+      if (user) return user;
+    } catch (e) {
+      console.warn('Mongo findUserByGoogleId error:', e.message);
+    }
+  }
+
+  const data = await loadData();
+  return (data.users || []).find((u) => u && u.googleId === googleId) || null;
+}
+
+async function createGoogleUser({ name, email, googleId, profilePicture }) {
+  const cleanName = (name || '').trim();
+  const cleanEmail = (email || '').trim().toLowerCase();
+
+  const newUser = {
+    id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+    name: cleanName,
+    email: cleanEmail,
+    googleId,
+    profilePicture: profilePicture || '',
+    authProvider: 'google',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('users').insertOne(newUser);
+    } catch (e) {
+      console.warn('Mongo createGoogleUser error:', e.message);
+    }
+  }
+
+  const data = await loadData();
+  if (!data.users.some((u) => u && u.googleId === googleId)) {
+    data.users.push(newUser);
+    await saveData(data);
+  }
+
+  return newUser;
+}
+
+async function linkGoogleAccount(userId, { googleId, profilePicture }) {
+  if (!userId || !googleId) return null;
+
+  const mdb = await getMongoDb();
+  if (mdb) {
+    try {
+      await mdb.collection('users').updateOne(
+        { id: userId },
+        {
+          $set: {
+            googleId,
+            ...(profilePicture ? { profilePicture } : {}),
+            authProvider: 'local+google',
+            updatedAt: new Date().toISOString(),
+          },
+        }
+      );
+      const user = await mdb.collection('users').findOne({ id: userId });
+      if (user) return user;
+    } catch (e) {
+      console.warn('Mongo linkGoogleAccount error:', e.message);
+    }
+  }
+
+  const data = await loadData();
+  const user = (data.users || []).find((u) => u && u.id === userId);
+  if (!user) return null;
+
+  user.googleId = googleId;
+  if (profilePicture && !user.profilePicture) {
+    user.profilePicture = profilePicture;
+  }
+  user.authProvider = user.passwordHash ? 'local+google' : 'google';
+  user.updatedAt = new Date().toISOString();
+
+  await saveData(data);
+  return user;
 }
 
 // -------------------------------------------------------------
@@ -648,7 +739,10 @@ async function getUserAnalytics(userId) {
 module.exports = {
   findUserByEmail,
   findUserById,
+  findUserByGoogleId,
   createUser,
+  createGoogleUser,
+  linkGoogleAccount,
   updateUserProfile,
   getUserHistory,
   addUserHistory,

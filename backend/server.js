@@ -5,11 +5,15 @@ const cors = require('cors');
 const axios = require('axios');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 
 const {
   findUserByEmail,
   findUserById,
+  findUserByGoogleId,
   createUser,
+  createGoogleUser,
+  linkGoogleAccount,
   updateUserProfile,
   getUserHistory,
   addUserHistory,
@@ -34,6 +38,9 @@ app.use(express.json());
 const GOOGLE_API_URL = 'https://translation.googleapis.com/language/translate/v2';
 const API_KEY = process.env.GOOGLE_TRANSLATE_API_KEY || process.env.TRANSLATION_API_KEY;
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_lingo_bridge_2026';
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
+
+const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
 
 // Helper to generate JWT
 function generateToken(user) {
@@ -194,6 +201,150 @@ app.post(['/api/auth/login', '/auth/login'], async (req, res) => {
     return res.status(500).json({
       success: false,
       message: 'Unable to login right now',
+      error: err.message || 'Internal server error',
+    });
+  }
+});
+
+// POST /api/auth/google or /auth/google
+app.post(['/api/auth/google', '/auth/google'], async (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  try {
+    const { credential } = req.body || {};
+
+    if (!credential || typeof credential !== 'string') {
+      return res.status(400).json({
+        success: false,
+        message: 'Google credential token is required.',
+        error: 'Missing credential',
+      });
+    }
+
+    let payload = null;
+    const clientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
+
+    // 1. Verify with official google-auth-library
+    if (clientId && clientId !== 'your_google_client_id_here') {
+      try {
+        const ticket = await googleClient.verifyIdToken({
+          idToken: credential,
+          audience: clientId,
+        });
+        payload = ticket.getPayload();
+      } catch (verifyErr) {
+        console.warn('Google client verifyIdToken error:', verifyErr.message);
+      }
+    }
+
+    // 2. Fallback to Google tokeninfo API endpoint
+    if (!payload) {
+      try {
+        const verifyRes = await axios.get(
+          `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`,
+          { timeout: 8000 }
+        );
+        payload = verifyRes.data;
+      } catch (tokenInfoErr) {
+        console.error('Google tokeninfo API verification error:', tokenInfoErr.message);
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid or expired Google authentication credential.',
+          error: 'Google token validation failed',
+        });
+      }
+    }
+
+    if (!payload || !payload.sub) {
+      return res.status(401).json({
+        success: false,
+        message: 'Could not extract valid identity from Google credential.',
+        error: 'Invalid payload',
+      });
+    }
+
+    // Google sub is the permanent unique identifier for the Google user
+    const googleId = String(payload.sub);
+    const email = (payload.email || '').trim().toLowerCase();
+    const name = (payload.name || payload.given_name || 'Google User').trim();
+    const picture = payload.picture || '';
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: 'No verified email address found in Google account.',
+        error: 'Missing email in Google payload',
+      });
+    }
+
+    // Step A: Check if user already exists with this googleId
+    let user = await findUserByGoogleId(googleId);
+
+    if (user) {
+      const token = generateToken(user);
+      return res.status(200).json({
+        success: true,
+        message: 'Google login successful',
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          profilePicture: user.profilePicture || picture,
+          authProvider: user.authProvider || 'google',
+        },
+      });
+    }
+
+    // Step B: Check if an account already exists with the same email (Safe Account Linking)
+    const existingEmailUser = await findUserByEmail(email);
+
+    if (existingEmailUser) {
+      user = await linkGoogleAccount(existingEmailUser.id, {
+        googleId,
+        profilePicture: picture,
+      });
+
+      const token = generateToken(user);
+      return res.status(200).json({
+        success: true,
+        message: 'Google account linked to your existing LingoBridge profile successfully.',
+        token,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          profilePicture: user.profilePicture || picture,
+          authProvider: user.authProvider || 'local+google',
+        },
+      });
+    }
+
+    // Step C: Create brand new account with Google identity
+    user = await createGoogleUser({
+      name,
+      email,
+      googleId,
+      profilePicture: picture,
+    });
+
+    const token = generateToken(user);
+    return res.status(201).json({
+      success: true,
+      message: 'Account created with Google successfully',
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        profilePicture: user.profilePicture || picture,
+        authProvider: 'google',
+      },
+    });
+  } catch (err) {
+    console.error('Google authentication error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to authenticate with Google. Please try again.',
       error: err.message || 'Internal server error',
     });
   }

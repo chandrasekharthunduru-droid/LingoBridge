@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
 import LingoBridgeLogo from '../components/LingoBridgeLogo';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 function SignUpPage() {
   const [name, setName] = useState('');
@@ -90,6 +91,12 @@ function SignUpPage() {
             {error}
           </div>
         )}
+
+        <GoogleSignInButton text="signup_with" onError={(msg) => setError(msg)} />
+
+        <div className="auth-divider">
+          <span>or sign up with email</span>
+        </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.25rem' }}>

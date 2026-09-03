@@ -90,6 +90,27 @@
       "email": "persistent_tester_1788418377317@example.com",
       "passwordHash": "$2b$10$BGyqmN.GiyhsnZfOVKyaZeTf1Tj8eX6N7oTdkGLQBzBK4ODkgHdVG",
       "createdAt": "2026-09-03T06:52:57.459Z"
+    },
+    {
+      "id": "user_1788419273205_ask8w",
+      "name": "Google Pioneer",
+      "email": "google_unique_1788419273205@gmail.com",
+      "googleId": "google_sub_1788419273205",
+      "profilePicture": "https://lh3.googleusercontent.com/a/default-user",
+      "authProvider": "google",
+      "createdAt": "2026-09-03T07:07:53.205Z",
+      "updatedAt": "2026-09-03T07:07:53.205Z"
+    },
+    {
+      "id": "user_1788419273212_thy0n",
+      "name": "Existing Local User",
+      "email": "local_existing_1788419273211@gmail.com",
+      "passwordHash": "some_hashed_password",
+      "authProvider": "local+google",
+      "createdAt": "2026-09-03T07:07:53.212Z",
+      "updatedAt": "2026-09-03T07:07:53.216Z",
+      "googleId": "google_sub_for_local_1788419273214",
+      "profilePicture": "https://lh3.googleusercontent.com/a/linked-pic"
     }
   ],
   "history": [
