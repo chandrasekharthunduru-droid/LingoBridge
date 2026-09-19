@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
 import LingoBridgeLogo from '../components/LingoBridgeLogo';
-import GoogleSignInButton from '../components/GoogleSignInButton';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,7 +28,7 @@ function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      navigate('/translator');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Failed to log in.');
     } finally {
@@ -44,7 +43,7 @@ function LoginPage() {
     setLoading(true);
     try {
       await login('demo@example.com', 'password123');
-      navigate('/translator');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Failed to log in with demo account.');
     } finally {
@@ -83,11 +82,6 @@ function LoginPage() {
           </div>
         )}
 
-        <GoogleSignInButton text="continue_with" onError={(msg) => setError(msg)} />
-
-        <div className="auth-divider">
-          <span>or sign in with email</span>
-        </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '1.25rem' }}>
