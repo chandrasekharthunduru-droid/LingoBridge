@@ -44,9 +44,10 @@ async function safeFetchJson(endpoint, options = {}) {
 }
 
 export function AuthProvider({ children }) {
+  const savedToken = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token') || null);
-  const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(savedToken);
+  const [loading, setLoading] = useState(Boolean(savedToken));
 
   // Restore session on mount if token exists
   useEffect(() => {
